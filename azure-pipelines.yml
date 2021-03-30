@@ -1,0 +1,34 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  BuildConfiguration: 'Release'
+  SolutionPath: '**/*.sln'
+
+steps:
+
+- task: DotNetCoreCLI@2
+  displayName: 'Build web project'
+  inputs:
+    command: 'build'
+    projects: $(SolutionPath)
+
+- task: DotNetCoreCLI@2
+  displayName: 'Publish and zip'
+  inputs:
+    command: publish
+    publishWebProjects: False
+    projects: $(SolutionPath)
+    arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: True
+
+# Optional step if you want to deploy to some other system using a Release pipeline or inspect the package afterwards
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Build artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
